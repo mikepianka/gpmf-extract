@@ -1,9 +1,9 @@
 /// <reference types="jest" />
-const gpmfExtract = require('..');
-const fs = require('fs');
+const gpmfExtract = require("..");
+const fs = require("fs");
 
-const path = './samples/karma.mp4';
-const extracted = fs.readFileSync('./samples/karma.raw');
+const path = "./samples/karma.mp4";
+const extracted = fs.readFileSync("./samples/karma.raw");
 
 function toBuffer(ab) {
   var buf = Buffer.alloc(ab.byteLength);
@@ -21,58 +21,78 @@ function toBuffer(ab) {
  * @return {Function}
  */
 function bufferAppender(path, chunkSize) {
-  return function(mp4boxFile) {
+  return function (mp4boxFile) {
     var stream = fs.createReadStream(path, { highWaterMark: chunkSize });
     var bytesRead = 0;
-    stream.on('end', () => {
+    stream.on("end", () => {
       mp4boxFile.flush();
     });
-    stream.on('data', (chunk) => {
+    stream.on("data", (chunk) => {
       var arrayBuffer = new Uint8Array(chunk).buffer;
       arrayBuffer.fileStart = bytesRead;
       var next = mp4boxFile.appendBuffer(arrayBuffer);
       bytesRead += chunk.length;
     });
     stream.resume();
-  }
+  };
 }
 
-describe('Testing the extracted raw data and timing from Buffer', () => {
+describe("Testing the extracted raw data and timing from Buffer", () => {
   let res;
   beforeAll(async () => {
     const file = fs.readFileSync(path);
     res = await gpmfExtract(file);
   });
 
-  test('The output should match the raw sample', () => {
+  test("The output should match the raw sample", () => {
     expect(Buffer.compare(toBuffer(res.rawData), extracted)).toBe(0);
   });
 
-  test('The output should have framerate data', () => {
+  test("The output should have framerate data", () => {
     expect(res.timing.frameDuration).toBe(0.03336666666666667);
   });
 
-  test('The output should contain the video duration', () => {
+  test("The output should contain the video duration", () => {
     expect(res.timing.videoDuration).toBe(12.078733333333334);
   });
 });
 
-describe('Testing the extracted raw data and timing from Path', () => {
+describe("Testing the extracted raw data and timing from Path", () => {
   let res;
   beforeAll(async () => {
     res = await gpmfExtract(bufferAppender(path, 10 * 1024 * 1024));
   });
 
-  test('The output should match the raw sample', () => {
+  test("The output should match the raw sample", () => {
     expect(res).toEqual(expect.anything());
     expect(Buffer.compare(toBuffer(res.rawData), extracted)).toBe(0);
   });
 
-  test('The output should have framerate data', () => {
+  test("The output should have framerate data", () => {
     expect(res.timing.frameDuration).toBe(0.03336666666666667);
   });
 
-  test('The output should contain the video duration', () => {
+  test("The output should contain the video duration", () => {
+    expect(res.timing.videoDuration).toBe(12.078733333333334);
+  });
+});
+
+describe("Testing the extracted raw data and timing from file path string", () => {
+  let res;
+  beforeAll(async () => {
+    res = await gpmfExtract(path);
+  });
+
+  test("The output should match the raw sample", () => {
+    expect(res).toEqual(expect.anything());
+    expect(Buffer.compare(toBuffer(res.rawData), extracted)).toBe(0);
+  });
+
+  test("The output should have framerate data", () => {
+    expect(res.timing.frameDuration).toBe(0.03336666666666667);
+  });
+
+  test("The output should contain the video duration", () => {
     expect(res.timing.videoDuration).toBe(12.078733333333334);
   });
 });
@@ -83,10 +103,26 @@ describe('Testing the extracted raw data and timing from Path', () => {
   const optionalTest = largeFilePath ? test : test.skip;
 
   describe(`Testing the extracted raw data and timing from the path of the full length video: "${largeFilePath}"`, () => {
-    optionalTest('The output should extracted', async() => {
-      const res = await gpmfExtract(bufferAppender(largeFilePath, 10 * 1024 * 1024));
-      expect(res).toEqual(expect.anything());
-      expect(res.rawData).toEqual(expect.anything());
-    }, 30000);
+    optionalTest(
+      "The output should extracted",
+      async () => {
+        const res = await gpmfExtract(
+          bufferAppender(largeFilePath, 10 * 1024 * 1024),
+        );
+        expect(res).toEqual(expect.anything());
+        expect(res.rawData).toEqual(expect.anything());
+      },
+      30000,
+    );
+
+    optionalTest(
+      "The output should extract from direct string path",
+      async () => {
+        const res = await gpmfExtract(largeFilePath);
+        expect(res).toEqual(expect.anything());
+        expect(res.rawData).toEqual(expect.anything());
+      },
+      30000,
+    );
   });
 }

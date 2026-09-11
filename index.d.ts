@@ -21,8 +21,8 @@ interface GPMFExtractNodeOptions extends GPMFExtractCommonOptions {
   browserMode: false;
 }
 
-interface GPMFExtractResult<P extends 'node' | 'browser'> {
-  rawData: P extends 'node' ? Buffer : Uint8Array;
+interface GPMFExtractResult<P extends "node" | "browser"> {
+  rawData: P extends "node" ? Buffer : Uint8Array;
   timing: {
     /** Duration of video in seconds */
     videoDuration: number;
@@ -35,7 +35,7 @@ interface GPMFExtractResult<P extends 'node' | 'browser'> {
       cts: number;
       duration: number;
     }[];
-  }
+  };
 }
 
 /** `ISOFile` is declared inside `mp4box`, use function `appendBuffer` to append to buffer and `flush` to complete it */
@@ -50,11 +50,15 @@ type ISOFile = {
 declare function GPMFExtract(
   file: Blob | File,
   options?: GPMFExtractBrowserOptions,
-): Promise<GPMFExtractResult<'browser'>>;
+): Promise<GPMFExtractResult<"browser">>;
 declare function GPMFExtract(
   file: Buffer | ((file: ISOFile) => void),
   options?: GPMFExtractNodeOptions,
-): Promise<GPMFExtractResult<'node'>>;
+): Promise<GPMFExtractResult<"node">>;
+declare function GPMFExtract(
+  file: string | NodeJS.ReadableStream,
+  options?: GPMFExtractNodeOptions,
+): Promise<GPMFExtractResult<"node">>;
 
 export default GPMFExtract;
 export { GPMFExtract };

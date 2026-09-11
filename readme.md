@@ -12,16 +12,28 @@ Install:
 $ npm i gpmf-extract
 ```
 
-Use:
+Use (browser or small files):
 
 ```js
-const gpmfExtract = require('gpmf-extract');
-gpmfExtract(file).then(res => {
-  console.log('Length of data received:', res.rawData.length);
-  console.log('Framerate of data received:', 1 / res.timing.frameDuration);
+const gpmfExtract = require("gpmf-extract");
+gpmfExtract(file).then((res) => {
+  console.log("Length of data received:", res.rawData.length);
+  console.log("Framerate of data received:", 1 / res.timing.frameDuration);
   // Do what you want with the data
 });
 ```
+
+For large files in Node.js (recommended):
+
+```js
+const gpmfExtract = require("gpmf-extract");
+
+gpmfExtract("./path/to/large-file.360").then((res) => {
+  console.log("Length of data received:", res.rawData.length);
+});
+```
+
+You can also pass a Node.js readable stream.
 
 You can specify some options in an object as a second argument:
 
@@ -31,14 +43,14 @@ You can specify some options in an object as a second argument:
 - **cancellationToken**: An optional object, containing a cancelled property, that allows for cancelling the extraction process. Currently only supported in browser mode. If cancelled, the extraction process will fail with the error message "Canceled by user".
 
 ```js
-const gpmfExtract = require('gpmf-extract');
-const progress = percent => console.log(`${percent}% processed`);
+const gpmfExtract = require("gpmf-extract");
+const progress = (percent) => console.log(`${percent}% processed`);
 const cancellationToken = { cancelled: false };
 gpmfExtract(file, { browserMode: true, progress, cancellationToken }).then(
-  res => {
+  (res) => {
     if (!res) return; //cancelled
     // Do what you want with the data
-  }
+  },
 );
 // Some other processes
 cancellationToken.cancelled = true;
